@@ -29,6 +29,7 @@ def split_into_batches(idx, batch_size):
     batches = np.array_split(whole_batches, nb_whole_batches)
 
     # add the leftover as the last batch (i.e. it will have a size < batch_size)
-    batches.append(idx[idx_at_last_whole_batch:])
+    if idx[idx_at_last_whole_batch:]:
+        batches.append(idx[idx_at_last_whole_batch:])
 
     return batches
