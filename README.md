@@ -4,8 +4,8 @@
 ## Layers to add
 - [x] Linear
 - [x] Dropout
-- [ ] 2D convolution
-- [ ] Flatten
+- [x] 2D convolution
+- [x] Flatten
 - [ ] Pooling
 ## Optimizers to add
 - [x] SGD
