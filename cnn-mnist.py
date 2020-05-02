@@ -1,6 +1,5 @@
 import numpy as np
-from core.activations import ReLU, Softmax
-from core.layers import Dense, Dropout, Conv2D, Flatten
+from core.layers import Dense, Dropout, Conv2D, Flatten, ReLU, Softmax
 from core.model import Model
 from core.utils import load_mnist
 from core.optimizer import SGD

@@ -1,6 +1,5 @@
 import numpy as np
-from core.activations import ReLU, Softmax
-from core.layers import Dense, Dropout
+from core.layers import Dense, Dropout, ReLU, Softmax
 from core.model import Model
 from core.utils import load_mnist
 from core.optimizer import SGD
@@ -8,34 +7,25 @@ from core.loss import CategoricalCrossEntropy
 import matplotlib.pyplot as plt
 
 
-layer1 = Dense(shape=(784, 512))
-layer2 = Dense(shape=(512, 512))
-layer3 = Dense(shape=(512, 10))
-activation1 = ReLU()
-activation2 = ReLU()
-activation3 = Softmax()
-dropout1 = Dropout(0.2)
-dropout2 = Dropout(0.2)
-
 model = Model()
 
-model.add(layer1)
-model.add(activation1)
-model.add(dropout1)
+model.add(Dense(shape=(784, 512)))
+model.add(ReLU())
+model.add(Dropout(0.2))
 
-model.add(layer2)
-model.add(activation2)
-model.add(dropout2)
+model.add(Dense(shape=(512, 512)))
+model.add(ReLU())
+model.add(Dropout(0.2))
 
-model.add(layer3)
-model.add(activation3)
+model.add(Dense(shape=(512, 10)))
+model.add(Softmax())
 
 model.compile(optimizer=SGD(lr=0.001), loss=CategoricalCrossEntropy())
 
 
 (x, y), (x_test, y_test) = load_mnist()
 
-model.fit(x, y, epoch=10)
+model.fit(x, y, epoch=10, batch_size=128)
 
 for i in range(10):
     idx = np.random.choice(np.arange(x_test.shape[0]))

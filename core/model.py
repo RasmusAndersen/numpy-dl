@@ -2,6 +2,7 @@ import numpy as np
 from core.optimizer import SGD
 from core.loss import CategoricalCrossEntropy
 from core.utils import split_into_batches
+from tqdm import tqdm
 
 
 class Model(object):
@@ -31,9 +32,8 @@ class Model(object):
     def backprop(self, ypred, ytarget):
         # compute the gradient of each layer
         next_grad = self.loss_function.derivative(ypred, ytarget)
-        for i in range(len(self.net)-2, -1, -1): # TODO: convert to for layer in self.net[:-2:-1]
-            if self.net[i].trainable:
-                next_grad = self.net[i].backward(next_grad, self.net[i+1])
+        for i in range(len(self.net)-1, -1, -1): # TODO: convert to for layer in self.net[:-2:-1]
+            next_grad = self.net[i].backward(next_grad)
 
         self.optimizer.update(self.net)
 
@@ -46,7 +46,7 @@ class Model(object):
             batch_idxs = split_into_batches(idx, batch_size)
 
             batch_loss, batch_acc = [], []
-            for batch_idx in batch_idxs:
+            for batch_idx in tqdm(batch_idxs):
                 ytarget = y[batch_idx]
                 ypred = self.predict(x[batch_idx])
                 loss = self.backprop(ypred=ypred, ytarget=ytarget)

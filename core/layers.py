@@ -15,7 +15,7 @@ class Layer(object):
     def forward(self, x):
         raise NotImplementedError
 
-    def backward(self, prev_delta, activation):
+    def backward(self, prev_delta):
         raise NotImplementedError
 
 
@@ -35,12 +35,12 @@ class Dense(Layer):
         self.last_input = x
         return np.dot(x, self.weights) + self.bias
 
-    def backward(self, prev_delta, activation):
+    def backward(self, prev_delta):
         # nice explanation: https://youtu.be/tIeHLnjs5U8?t=281
-        activation_gradient = activation.gradient() * prev_delta
-        self.weights_grad = np.dot(self.last_input.T, activation_gradient)
-        self.bias_grad = np.mean(activation_gradient, axis=0)
-        return np.dot(activation_gradient, self.weights.T)
+        #activation_gradient = activation.gradient() * prev_delta
+        self.weights_grad = np.dot(self.last_input.T, prev_delta)
+        self.bias_grad = np.mean(prev_delta, axis=0)
+        return np.dot(prev_delta, self.weights.T)
 
 
 class Conv2D(Layer):
@@ -93,9 +93,7 @@ class Conv2D(Layer):
 
         return output
 
-    def backward(self, prev_delta, activation):
-        activation_gradient = activation.gradient() * prev_delta
-
+    def backward(self, prev_delta):
         kernel_height, kernel_width = self.kernel_size
         nb_batch, input_img_height, input_img_width, nb_input_channels = self.last_input.shape
 
@@ -104,11 +102,11 @@ class Conv2D(Layer):
                 for h in np.arange(kernel_height):
                     for w in np.arange(kernel_width):
                         patch = self.last_input[:, h:h+input_img_height-kernel_height+1:self.stride, w:w+input_img_width-kernel_width+1:self.stride, input_channel]
-                        grad_window = activation_gradient[..., filter]
+                        grad_window = prev_delta[..., filter]
                         self.weights_grad[filter, input_channel, h, w] = np.sum(patch * grad_window) / nb_batch
 
         for filter in np.arange(self.nb_filters):
-            self.bias_grad[filter] = np.sum(activation_gradient[..., filter]) / nb_batch
+            self.bias_grad[filter] = np.sum(prev_delta[..., filter]) / nb_batch
 
         kernel_grads = Zeros()(shape=self.last_input.shape)
         for batch in np.arange(nb_batch):
@@ -116,7 +114,7 @@ class Conv2D(Layer):
                 for input_channel in np.arange(nb_input_channels):
                     for h in np.arange(input_img_height - kernel_height):
                         for w in np.arange(input_img_width - kernel_width):
-                            kernel_grads[batch, h:h + kernel_height, w:w + kernel_width, input_channel] += self.weights[filter, input_channel] * activation_gradient[batch, h, w, filter]
+                            kernel_grads[batch, h:h + kernel_height, w:w + kernel_width, input_channel] += self.weights[filter, input_channel] * prev_delta[batch, h, w, filter]
         return kernel_grads
 
 
@@ -131,20 +129,43 @@ class Dropout(Layer):
         self.last_input = mask
         return x * mask
 
-    def backward(self, prev_delta, activation):
+    def backward(self, prev_delta):
         return prev_delta * self.last_input
 
 
 class Flatten(Layer):
     def __init__(self, name=None):
         super(Flatten, self).__init__(name=name)
-        self.trainable = True
-
-        self.weights, self.bias, self.weights_grad, self.bias_grad = np.arange(4)
 
     def forward(self, x):
         self.last_input = x.shape
         return x.reshape((x.shape[0], -1))
 
-    def backward(self, prev_delta, activation):
+    def backward(self, prev_delta):
         return prev_delta.reshape(self.last_input)
+
+
+class ReLU(Layer):
+    def __init__(self, name=None):
+        super(ReLU, self).__init__(name=name)
+
+    def forward(self, x, gradient=False):
+        self.last_input = x
+        return np.maximum(0.0, x)
+
+    def backward(self, prev_delta):
+        return (self.last_input > 0).astype(np.float64) * prev_delta
+
+
+class Softmax(Layer):
+    def __init__(self, name=None):
+        super(Softmax, self).__init__(name=name)
+
+    def forward(self, x, gradient=False):
+        self.last_input = x
+
+        m = np.atleast_2d(x.max(axis=1)).T
+        return (np.exp(x - m).T / np.sum(np.exp(x - m).T, axis=0)).T
+
+    def backward(self, prev_delta):
+        return np.ones_like(self.last_input) * prev_delta
