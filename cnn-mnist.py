@@ -1,5 +1,5 @@
 import numpy as np
-from core.layers import Dense, Dropout, Conv2D, Flatten, ReLU, Softmax
+from core.layers import Dense, Dropout, Conv2D, Flatten, ReLU, Softmax, MaxPooling2D
 from core.model import Model
 from core.utils import load_mnist
 from core.optimizer import SGD
@@ -10,8 +10,9 @@ model = Model()
 
 model.add(Conv2D(filters=1, shape=(28, 28, 1), kernel_size=(3, 3)))
 model.add(ReLU())
+model.add(MaxPooling2D(shape=(2,2)))
 model.add(Flatten())
-model.add(Dense(shape=(676, 128)))
+model.add(Dense(shape=(169, 128)))
 model.add(ReLU())
 model.add(Dense(shape=(128, 10)))
 model.add(Softmax())

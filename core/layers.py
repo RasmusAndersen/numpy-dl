@@ -7,7 +7,7 @@ class Layer(object):
         self.name = name
         self.last_input = None
         self.trainable = False
-        self.shape = shape
+        self.shape = shape # TODO: not used
 
     def get_name(self):
         return self.name
@@ -116,6 +116,48 @@ class Conv2D(Layer):
                         for w in np.arange(input_img_width - kernel_width):
                             kernel_grads[batch, h:h + kernel_height, w:w + kernel_width, input_channel] += self.weights[filter, input_channel] * prev_delta[batch, h, w, filter]
         return kernel_grads
+
+
+class MaxPooling2D(Layer):
+    def __init__(self, shape, name=None):
+        super(MaxPooling2D, self).__init__(shape=shape, name=name)
+
+    def forward(self, x):
+        self.last_input = x
+
+        nb_batch, input_img_height, input_img_width, nb_input_channels = self.last_input.shape
+
+        pool_height, pool_width = self.shape
+        output_height = input_img_height // pool_height
+        output_width = input_img_width // pool_width
+
+        output = Zeros()((nb_batch, output_height, output_width, nb_input_channels))
+
+        for batch in np.arange(nb_batch):
+            for channel in np.arange(nb_input_channels):
+                for h in np.arange(input_img_height, step=pool_height):
+                    for w in np.arange(input_img_width, step=pool_width):
+                        output[batch, h//pool_height, w//pool_width, channel] = np.max(x[batch, h:h+pool_height, w:w+pool_width, channel])
+
+        return output
+
+    def backward(self, prev_delta):
+
+        nb_batch, input_img_height, input_img_width, nb_input_channels = self.last_input.shape
+        pool_height, pool_width = self.shape
+
+        grads = Zeros()(self.last_input.shape)
+
+        for batch in np.arange(nb_batch):
+            for channel in np.arange(nb_input_channels):
+                for h in np.arange(input_img_height, step=pool_height):
+                    for w in np.arange(input_img_width, step=pool_width):
+                        patch = self.last_input[batch, h:h + pool_height, w:w + pool_width, channel]
+                        if patch.sum() <= 0.:
+                            continue
+                        h_shift, w_shift = np.unravel_index(patch.argmax(), patch.shape)
+                        grads[batch, h+h_shift, w+w_shift, channel] = prev_delta[batch, h//pool_height, w//pool_width, channel]
+        return grads
 
 
 class Dropout(Layer):
