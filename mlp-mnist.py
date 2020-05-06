@@ -6,6 +6,7 @@ from core.optimizer import SGD
 from core.loss import CategoricalCrossEntropy
 import matplotlib.pyplot as plt
 
+np.random.seed(1234)
 
 model = Model()
 
@@ -25,14 +26,12 @@ model.compile(optimizer=SGD(lr=0.001), loss=CategoricalCrossEntropy())
 
 (x, y), (x_test, y_test) = load_mnist()
 
-model.fit(x, y, epoch=10, batch_size=128)
+train_loss, train_acc, val_loss, val_acc = model.fit(x, y, x_test, y_test, epoch=10, batch_size=128)
 
-for i in range(10):
-    idx = np.random.choice(np.arange(x_test.shape[0]))
-    x_sample = x_test[idx, :].reshape((1, x_test.shape[1]))
-    y_sample = y_test[idx, :].reshape((1, y_test.shape[1]))
+plt.plot(train_acc, label='train loss')
+plt.plot(val_acc, label='val loss')
+plt.legend()
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.show()
 
-    prediction = model.predict(x_sample)
-    plt.imshow(x_sample.reshape((28, 28)), 'gray')
-    plt.title(f'{prediction}\npredicted: {np.argmax(prediction)}, true: {np.argmax(y_sample)}')
-    plt.show()

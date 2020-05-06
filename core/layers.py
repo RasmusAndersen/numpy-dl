@@ -56,7 +56,7 @@ class Conv2D(Layer):
         self.kernel_size = kernel_size
 
         self.nb_filters = filters
-        self.stride = stride
+        self.stride = stride # TODO: not used
 
         self.weights = self.initializer((self.nb_filters, self.input_size[-1], self.kernel_size[0], self.kernel_size[1]))
         self.bias = Zeros()(self.nb_filters)
@@ -101,7 +101,7 @@ class Conv2D(Layer):
             for input_channel in np.arange(nb_input_channels):
                 for h in np.arange(kernel_height):
                     for w in np.arange(kernel_width):
-                        patch = self.last_input[:, h:h+input_img_height-kernel_height+1:self.stride, w:w+input_img_width-kernel_width+1:self.stride, input_channel]
+                        patch = self.last_input[:, h:h+input_img_height-kernel_height+1, w:w+input_img_width-kernel_width+1, input_channel]
                         grad_window = prev_delta[..., filter]
                         self.weights_grad[filter, input_channel, h, w] = np.sum(patch * grad_window) / nb_batch
 
