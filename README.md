@@ -2,14 +2,16 @@
 
 # TODOs
 ## Layers to add
-- [x] Linear
+- [x] Linear/Dense
 - [x] Dropout
 - [x] 2D convolution
+	- [ ] stride
 - [x] Flatten
-- [ ] Pooling
+- [x] Pooling
+	- [ ] stride
 ## Optimizers to add
 - [x] SGD
-- [ ] Add Adam optimizer
+- [ ] Adam optimizer
 ## Objective functions to add
 - [x] Categorical Crossentropy
 - [ ] RMSprop
